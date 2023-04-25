@@ -156,8 +156,10 @@ const App = () => {
     setSearchTerm(event.target.value);
   }
 
-  const handleSearchSubmit = () => {
+  const handleSearchSubmit = (event) => {
     setUrl(`${API_EDNPOINT}${searchTerm}`)
+
+    event.preventDefault()
   }
 
   //整合useState状态
@@ -166,28 +168,43 @@ const App = () => {
     { data: [], isLoading: false, isError: false }
   )
 
-  const handleFetchStories = React.useCallback(() => {
-    // if `searchTerm` is not present
-    // e.g. null, empty string, undefined
-    // do nothing
-    // more generalized condition than searchTerm === ''
-    if (!searchTerm) return;
-
+  const handleFetchStories = React.useCallback(async () => {
     dispatchStories({ type: 'STORIES_FETCH_INIT' });
 
-    // getAsyncStories()
-    // fetch(url)
-    axios
-      .get(url)
-      // .then((response) => response.json())
-      .then((result) => {
-        dispatchStories({
-          type: 'STORIES_FETCH_SUCCESS',
-          payload: result.data.hits,
-        });
-      })
-      .catch(() => dispatchStories({ type: 'STORIES_FETCH_FAILURE' }))
-  }, [url]);
+    try {
+      const result = await axios.get(url);
+
+      dispatchStories({
+        type: 'STORIES_FETCH_SUCCESS',
+        payload: result.data.hits,
+      });
+    } catch {
+      dispatchStories({ type: 'STORIES_FETCH_FAILURE' })
+    }
+  }, [url])
+
+  // const handleFetchStories = React.useCallback(() => {
+  //   // if `searchTerm` is not present
+  //   // e.g. null, empty string, undefined
+  //   // do nothing
+  //   // more generalized condition than searchTerm === ''
+  //   if (!searchTerm) return;
+
+  //   dispatchStories({ type: 'STORIES_FETCH_INIT' });
+
+  //   // getAsyncStories()
+  //   // fetch(url)
+  //   axios
+  //     .get(url)
+  //     // .then((response) => response.json())
+  //     .then((result) => {
+  //       dispatchStories({
+  //         type: 'STORIES_FETCH_SUCCESS',
+  //         payload: result.data.hits,
+  //       });
+  //     })
+  //     .catch(() => dispatchStories({ type: 'STORIES_FETCH_FAILURE' }))
+  // }, [url]);
 
   React.useEffect(() => {
     handleFetchStories();
@@ -287,25 +304,27 @@ const App = () => {
   return (
 
     <div>
-      <h1>My Hacker Stories</h1>
 
-      <InputWithLabel
-        id="search"
-        // label="Search"
-        value={searchTerm}
-        isFocused
-        onInputChange={handleSearchInput}
-      >
-        <strong>Search: </strong>
-      </InputWithLabel>
 
-      <button
-        type='button'
-        disabled={!searchTerm}
-        onClick={handleSearchSubmit}
-      >
-        Submit
-      </button>
+      {/* <form onSubmit={handleSearchSubmit}>
+        <InputWithLabel
+          id="search"
+          // label="Search"
+          value={searchTerm}
+          isFocused
+          onInputChange={handleSearchInput}
+        >
+          <strong>Search: </strong>
+        </InputWithLabel>
+
+        <button
+          type='submit'
+          disabled={!searchTerm}
+        >
+          Submit
+        </button>
+      </form> */}
+
 
       {/* <InputWithLabel
         id="search"
@@ -318,6 +337,14 @@ const App = () => {
       </InputWithLabel> */}
 
       {/* <Search search={searchTerm} onSearch={handleSearch} /> */}
+
+      <h1>My Hacker Stories</h1>
+
+      <SearchForm
+        searchTerm={searchTerm}
+        onSearchInput={handleSearchInput}
+        onSearchSubmit={handleSearchSubmit}
+      />
 
       <hr />
 
@@ -358,6 +385,33 @@ const InputWithLabel = ({ id, label, value, onInputChange, type = 'text', childr
     </>
   )
 }
+
+const SearchForm = ({
+  searchTerm,
+  onSearchInput,
+  onSearchSubmit
+}) => (
+  <form onSubmit={onSearchSubmit}>
+    <InputWithLabel
+      id="search"
+      // label="Search"
+      value={searchTerm}
+      isFocused
+      onInputChange={onSearchInput}
+    >
+      <strong>Search: </strong>
+    </InputWithLabel>
+
+    <button
+      type='submit'
+      disabled={!searchTerm}
+    >
+      Submit
+    </button>
+  </form>
+)
+
+
 
 //增加默认type,使其组件封装
 // const InputWithLabel = ({ id, label, value, onInputChange, type = 'text', children, isFocused }) => (
